@@ -65,38 +65,26 @@ export function useChat() {
           if (done) break;
 
           const chunk = decoder.decode(value);
-          const lines = chunk.split("\n");
+          assistantMessage += chunk;
 
-          for (const line of lines) {
-            if (line.startsWith("0:")) {
-              try {
-                const data = JSON.parse(line.slice(2));
-                if (data.type === "text-delta" && data.textDelta) {
-                  assistantMessage += data.textDelta;
-                  setMessages((prev) => {
-                    const existing = prev.find((m) => m.id === assistantId);
-                    if (existing) {
-                      return prev.map((m) =>
-                        m.id === assistantId
-                          ? { ...m, content: assistantMessage }
-                          : m
-                      );
-                    }
-                    return [
-                      ...prev,
-                      {
-                        id: assistantId,
-                        role: "assistant" as const,
-                        content: assistantMessage,
-                      },
-                    ];
-                  });
-                }
-              } catch {
-                // Skip invalid JSON
-              }
+          setMessages((prev) => {
+            const existing = prev.find((m) => m.id === assistantId);
+            if (existing) {
+              return prev.map((m) =>
+                m.id === assistantId
+                  ? { ...m, content: assistantMessage }
+                  : m
+              );
             }
-          }
+            return [
+              ...prev,
+              {
+                id: assistantId,
+                role: "assistant" as const,
+                content: assistantMessage,
+              },
+            ];
+          });
         }
       } catch {
         setMessages((prev) => [

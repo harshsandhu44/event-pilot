@@ -11,7 +11,7 @@ export async function POST(req: Request) {
     const { messages } = await req.json();
 
     const result = streamText({
-      model: google("gemini-1.5-flash"),
+      model: google("gemini-2.5-flash-lite"),
       messages,
       tools: {
         findStall: tool({
@@ -31,13 +31,13 @@ export async function POST(req: Request) {
               const nameQuery = query(
                 stallsRef,
                 where("nameLower", ">=", searchLower),
-                where("nameLower", "<=", searchLower + "\uf8ff")
+                where("nameLower", "<=", searchLower + "\uf8ff"),
               );
 
               // Query for category match
               const categoryQuery = query(
                 stallsRef,
-                where("category", "==", searchLower)
+                where("category", "==", searchLower),
               );
 
               const [nameSnapshot, categorySnapshot] = await Promise.all([
@@ -135,7 +135,7 @@ export async function POST(req: Request) {
       {
         status: 500,
         headers: { "Content-Type": "application/json" },
-      }
+      },
     );
   }
 }
