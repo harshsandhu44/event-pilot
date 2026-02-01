@@ -1,0 +1,10 @@
+[install]
+# Use workspaces
+workspaces = true
+
+# Faster installs
+cache = true
+parallel = true
+
+[install.scopes]
+"@eventpilot" = { path = "./packages" }
