@@ -11,10 +11,12 @@
   "dependencies": {
     "@11labs/react": "^0.2.0",
     "@ai-sdk/google": "^3.0.20",
+    "@genkit-ai/google-genai": "^1.28.0",
     "ai": "^6.0.67",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "firebase": "^12.8.0",
+    "genkit": "^1.28.0",
     "lucide-react": "^0.563.0",
     "next": "16.1.6",
     "react": "19.2.3",
