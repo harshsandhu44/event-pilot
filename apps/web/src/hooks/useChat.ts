@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
+import { useEvent } from "./useEvent";
 
 export type Message = {
   id: string;
@@ -9,6 +10,7 @@ export type Message = {
 };
 
 export function useChat() {
+  const { currentEvent } = useEvent();
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -33,12 +35,17 @@ export function useChat() {
       setIsLoading(true);
 
       try {
+        if (!currentEvent) {
+          throw new Error("No event selected");
+        }
+
         const response = await fetch("/api/chat", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
+            eventId: currentEvent.id,
             messages: [...messages, userMessage].map((m) => ({
               role: m.role,
               content: m.content,
@@ -99,7 +106,7 @@ export function useChat() {
         setIsLoading(false);
       }
     },
-    [input, isLoading, messages]
+    [input, isLoading, messages, currentEvent]
   );
 
   return {

@@ -1,14 +1,32 @@
 import { google } from "@ai-sdk/google";
 import { streamText, tool } from "ai";
-import { db } from "@eventpilot/firebase/client";
-import { collection, query, where, getDocs } from "firebase/firestore";
 import { z } from "zod";
+import {
+  searchStalls,
+  getStallsByCategory,
+  getStallById,
+} from "@eventpilot/firebase/queries/stalls";
+import {
+  getScheduleItems,
+  getCurrentScheduleItems,
+} from "@eventpilot/firebase/queries/schedule";
+import {
+  getAmenities,
+} from "@eventpilot/firebase/queries/amenities";
+import { getEventById } from "@eventpilot/firebase/queries/events";
 
 export const maxDuration = 30;
 
 export async function POST(req: Request) {
   try {
-    const { messages } = await req.json();
+    const { messages, eventId } = await req.json();
+
+    if (!eventId) {
+      return new Response(
+        JSON.stringify({ error: "Event ID is required" }),
+        { status: 400, headers: { "Content-Type": "application/json" } }
+      );
+    }
 
     const result = streamText({
       model: google("gemini-2.5-flash-lite"),
@@ -16,7 +34,7 @@ export async function POST(req: Request) {
       tools: {
         findStall: tool({
           description:
-            "Search for stalls by name or category at the event. Returns stall information including location, description, and offerings.",
+            "Search for stalls/booths by name or category at the event. Returns stall information including location, description, and current status.",
           inputSchema: z.object({
             searchTerm: z
               .string()
@@ -24,38 +42,15 @@ export async function POST(req: Request) {
           }),
           execute: async ({ searchTerm }) => {
             try {
-              const stallsRef = collection(db, "stalls");
               const searchLower = searchTerm.toLowerCase();
 
-              // Query for name match
-              const nameQuery = query(
-                stallsRef,
-                where("nameLower", ">=", searchLower),
-                where("nameLower", "<=", searchLower + "\uf8ff"),
-              );
+              // Try name search first
+              let stalls = await searchStalls(eventId, searchLower);
 
-              // Query for category match
-              const categoryQuery = query(
-                stallsRef,
-                where("category", "==", searchLower),
-              );
-
-              const [nameSnapshot, categorySnapshot] = await Promise.all([
-                getDocs(nameQuery),
-                getDocs(categoryQuery),
-              ]);
-
-              const results = new Map();
-
-              nameSnapshot.forEach((doc) => {
-                results.set(doc.id, { id: doc.id, ...doc.data() });
-              });
-
-              categorySnapshot.forEach((doc) => {
-                results.set(doc.id, { id: doc.id, ...doc.data() });
-              });
-
-              const stalls = Array.from(results.values());
+              // If no results, try category search
+              if (stalls.length === 0) {
+                stalls = await getStallsByCategory(eventId, searchLower);
+              }
 
               if (stalls.length === 0) {
                 return {
@@ -72,6 +67,10 @@ export async function POST(req: Request) {
                   category: stall.category,
                   location: stall.location,
                   description: stall.description,
+                  isCrowded: stall.isCrowded,
+                  waitTimeMin: stall.waitTimeMin,
+                  hasGiveaways: stall.hasGiveaways,
+                  tags: stall.tags,
                 })),
               };
             } catch (error) {
@@ -85,38 +84,180 @@ export async function POST(req: Request) {
         }),
         getDirections: tool({
           description:
-            "Get navigation directions to a specific stall at the event",
+            "Get navigation directions to a specific stall/booth at the event",
           inputSchema: z.object({
             stallId: z.string().describe("The ID of the stall to navigate to"),
           }),
           execute: async ({ stallId }) => {
             try {
-              const stallsRef = collection(db, "stalls");
-              const stallQuery = query(stallsRef, where("id", "==", stallId));
-              const snapshot = await getDocs(stallQuery);
+              const stall = await getStallById(eventId, stallId);
 
-              if (snapshot.empty) {
+              if (!stall) {
                 return {
                   success: false,
                   message: `Stall with ID "${stallId}" not found`,
                 };
               }
 
-              const stall = snapshot.docs[0].data();
-
               return {
                 success: true,
                 directions: {
                   stallName: stall.name,
                   location: stall.location,
-                  directions: stall.directions || "Head to " + stall.location,
-                  mapCoordinates: stall.coordinates,
                 },
               };
             } catch (error) {
               return {
                 success: false,
                 message: "Error getting directions",
+                error: error instanceof Error ? error.message : "Unknown error",
+              };
+            }
+          },
+        }),
+        getSchedule: tool({
+          description:
+            "Get the event schedule. Can filter by type (session, workshop, keynote, break, networking) or status (scheduled, ongoing, completed). Also shows what's currently happening.",
+          inputSchema: z.object({
+            type: z
+              .enum(["session", "workshop", "keynote", "break", "networking", "other"])
+              .optional()
+              .describe("Filter by schedule item type"),
+            currentOnly: z
+              .boolean()
+              .optional()
+              .describe("Show only items happening right now"),
+          }),
+          execute: async ({ type, currentOnly }) => {
+            try {
+              let items;
+
+              if (currentOnly) {
+                items = await getCurrentScheduleItems(eventId);
+              } else {
+                items = await getScheduleItems(eventId, { type });
+              }
+
+              if (items.length === 0) {
+                return {
+                  success: false,
+                  message: currentOnly
+                    ? "No events are currently happening"
+                    : "No schedule items found",
+                };
+              }
+
+              return {
+                success: true,
+                scheduleItems: items.map((item) => ({
+                  id: item.id,
+                  type: item.type,
+                  title: item.title,
+                  description: item.description,
+                  speaker: item.speaker,
+                  location: item.location,
+                  startTime: item.startTime.toISOString(),
+                  endTime: item.endTime.toISOString(),
+                  status: item.status,
+                })),
+              };
+            } catch (error) {
+              return {
+                success: false,
+                message: "Error fetching schedule",
+                error: error instanceof Error ? error.message : "Unknown error",
+              };
+            }
+          },
+        }),
+        findAmenity: tool({
+          description:
+            "Find amenities at the event like restrooms, ATMs, food areas, first aid, parking, charging stations, etc.",
+          inputSchema: z.object({
+            type: z
+              .enum([
+                "restroom",
+                "atm",
+                "food",
+                "firstAid",
+                "parking",
+                "charging",
+                "wifi",
+                "other",
+              ])
+              .optional()
+              .describe("Type of amenity to find"),
+            accessibleOnly: z
+              .boolean()
+              .optional()
+              .describe("Show only wheelchair accessible amenities"),
+          }),
+          execute: async ({ type, accessibleOnly }) => {
+            try {
+              const amenities = await getAmenities(eventId, {
+                type,
+                isAccessible: accessibleOnly,
+              });
+
+              if (amenities.length === 0) {
+                return {
+                  success: false,
+                  message: type
+                    ? `No ${type} amenities found`
+                    : "No amenities found",
+                };
+              }
+
+              return {
+                success: true,
+                amenities: amenities.map((amenity) => ({
+                  id: amenity.id,
+                  type: amenity.type,
+                  name: amenity.name,
+                  location: amenity.location,
+                  isAccessible: amenity.isAccessible,
+                  isAvailable: amenity.isAvailable,
+                })),
+              };
+            } catch (error) {
+              return {
+                success: false,
+                message: "Error finding amenities",
+                error: error instanceof Error ? error.message : "Unknown error",
+              };
+            }
+          },
+        }),
+        getEventInfo: tool({
+          description:
+            "Get general event information like WiFi details, venue name, event description, and dates",
+          inputSchema: z.object({}),
+          execute: async () => {
+            try {
+              const event = await getEventById(eventId);
+
+              if (!event) {
+                return {
+                  success: false,
+                  message: "Event not found",
+                };
+              }
+
+              return {
+                success: true,
+                event: {
+                  name: event.name,
+                  description: event.description,
+                  venue: event.venue,
+                  startDate: event.startDate.toISOString(),
+                  endDate: event.endDate.toISOString(),
+                  wifiDetails: event.wifiDetails,
+                },
+              };
+            } catch (error) {
+              return {
+                success: false,
+                message: "Error getting event info",
                 error: error instanceof Error ? error.message : "Unknown error",
               };
             }
@@ -135,7 +276,7 @@ export async function POST(req: Request) {
       {
         status: 500,
         headers: { "Content-Type": "application/json" },
-      },
+      }
     );
   }
 }
