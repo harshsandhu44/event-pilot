@@ -106,11 +106,11 @@ export function VoiceChat() {
 
   return (
     <div className="flex flex-col h-full">
-      <div className="flex-1 overflow-y-auto space-y-4 mb-4">
+      <div className="flex-1 overflow-y-auto space-y-3 sm:space-y-4 mb-3 sm:mb-4 px-1">
         {messages.length === 0 && (
-          <div className="text-center text-muted-foreground py-8">
-            <p className="text-lg font-medium">Voice Chat Mode</p>
-            <p className="text-sm mt-2">
+          <div className="text-center text-muted-foreground py-6 sm:py-8 px-4">
+            <p className="text-base sm:text-lg font-medium">Voice Chat Mode</p>
+            <p className="text-xs sm:text-sm mt-2">
               Tap the microphone to start talking with the AI assistant.
             </p>
           </div>
@@ -123,13 +123,13 @@ export function VoiceChat() {
             }`}
           >
             <div
-              className={`max-w-[80%] rounded-lg px-4 py-2 ${
+              className={`max-w-[85%] sm:max-w-[80%] rounded-lg px-3 py-2 sm:px-4 sm:py-2.5 ${
                 message.role === "user"
                   ? "bg-primary text-primary-foreground"
                   : "bg-muted"
               }`}
             >
-              <p className="text-sm whitespace-pre-wrap">
+              <p className="text-sm sm:text-base whitespace-pre-wrap break-words">
                 {message.content}
               </p>
             </div>
@@ -137,14 +137,14 @@ export function VoiceChat() {
         ))}
         {isLoading && (
           <div className="flex justify-start">
-            <div className="max-w-[80%] rounded-lg px-4 py-2 bg-muted">
+            <div className="max-w-[85%] sm:max-w-[80%] rounded-lg px-3 py-2 sm:px-4 sm:py-2.5 bg-muted">
               <p className="text-sm text-muted-foreground">Thinking...</p>
             </div>
           </div>
         )}
         {isPlaying && (
           <div className="flex justify-start">
-            <div className="max-w-[80%] rounded-lg px-4 py-2 bg-blue-100 dark:bg-blue-900">
+            <div className="max-w-[85%] sm:max-w-[80%] rounded-lg px-3 py-2 sm:px-4 sm:py-2.5 bg-blue-100 dark:bg-blue-900">
               <p className="text-sm text-muted-foreground">Speaking...</p>
             </div>
           </div>
@@ -152,29 +152,29 @@ export function VoiceChat() {
         <div ref={messagesEndRef} />
       </div>
 
-      <div className="flex flex-col items-center gap-4">
+      <div className="flex flex-col items-center gap-3 sm:gap-4 px-1">
         {transcript && (
-          <div className="w-full p-3 bg-muted rounded-lg">
-            <p className="text-sm text-center">{transcript}</p>
+          <div className="w-full p-2.5 sm:p-3 bg-muted rounded-lg">
+            <p className="text-xs sm:text-sm text-center break-words">{transcript}</p>
           </div>
         )}
         <Button
           size="lg"
           onClick={toggleListening}
           disabled={isLoading}
-          className={`rounded-full w-16 h-16 ${
+          className={`rounded-full w-20 h-20 sm:w-24 sm:h-24 ${
             isListening
               ? "bg-red-500 hover:bg-red-600"
               : "bg-primary hover:bg-primary/90"
           }`}
         >
           {isListening ? (
-            <MicOff className="h-6 w-6" />
+            <MicOff className="h-8 w-8 sm:h-10 sm:w-10" />
           ) : (
-            <Mic className="h-6 w-6" />
+            <Mic className="h-8 w-8 sm:h-10 sm:w-10" />
           )}
         </Button>
-        <p className="text-sm text-muted-foreground">
+        <p className="text-sm sm:text-base text-muted-foreground font-medium">
           {isListening ? "Listening..." : "Tap to speak"}
         </p>
       </div>

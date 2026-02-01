@@ -82,54 +82,55 @@ export function GetUpdates() {
   };
 
   return (
-    <div className="flex flex-col h-full">
-      <div className="flex items-center justify-between mb-4 pb-4 border-b">
-        <div>
-          <h3 className="text-lg font-semibold">Event Updates</h3>
-          <p className="text-sm text-muted-foreground">
-            Stay informed about event changes and announcements
+    <div className="flex flex-col h-full px-1">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-3 sm:mb-4 pb-3 sm:pb-4 border-b">
+        <div className="flex-1">
+          <h3 className="text-base sm:text-lg font-semibold">Event Updates</h3>
+          <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
+            Stay informed about event changes
           </p>
         </div>
         <Button
           variant={notificationsEnabled ? "default" : "outline"}
           size="sm"
           onClick={toggleNotifications}
+          className="w-full sm:w-auto text-xs sm:text-sm h-9"
         >
           {notificationsEnabled ? (
             <>
-              <Bell className="h-4 w-4 mr-2" />
+              <Bell className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5 sm:mr-2" />
               Enabled
             </>
           ) : (
             <>
-              <BellOff className="h-4 w-4 mr-2" />
+              <BellOff className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5 sm:mr-2" />
               Enable
             </>
           )}
         </Button>
       </div>
 
-      <div className="flex-1 overflow-y-auto space-y-3">
+      <div className="flex-1 overflow-y-auto space-y-2.5 sm:space-y-3">
         {updates.length === 0 ? (
-          <div className="text-center text-muted-foreground py-8">
-            <p className="text-lg font-medium">No updates yet</p>
-            <p className="text-sm mt-2">
-              Check back later for event announcements and changes.
+          <div className="text-center text-muted-foreground py-6 sm:py-8 px-4">
+            <p className="text-base sm:text-lg font-medium">No updates yet</p>
+            <p className="text-xs sm:text-sm mt-2">
+              Check back later for event announcements.
             </p>
           </div>
         ) : (
           updates.map((update) => (
             <div
               key={update.id}
-              className={`p-4 rounded-lg border ${getTypeColor(update.type)}`}
+              className={`p-3 sm:p-4 rounded-lg border ${getTypeColor(update.type)}`}
             >
               <div className="flex items-start justify-between gap-2 mb-1">
-                <h4 className="font-semibold text-sm">{update.title}</h4>
+                <h4 className="font-semibold text-xs sm:text-sm flex-1">{update.title}</h4>
                 <span className="text-xs text-muted-foreground whitespace-nowrap">
                   {formatTime(update.timestamp)}
                 </span>
               </div>
-              <p className="text-sm">{update.message}</p>
+              <p className="text-xs sm:text-sm">{update.message}</p>
             </div>
           ))
         )}
