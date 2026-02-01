@@ -14,19 +14,22 @@ export function useChat() {
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = useCallback(
-    async (e?: React.FormEvent) => {
+    async (e?: React.FormEvent, voiceInput?: string) => {
       e?.preventDefault();
 
-      if (!input.trim() || isLoading) return;
+      const messageContent = voiceInput || input;
+      if (!messageContent.trim() || isLoading) return;
 
       const userMessage: Message = {
         id: Date.now().toString(),
         role: "user",
-        content: input,
+        content: messageContent,
       };
 
       setMessages((prev) => [...prev, userMessage]);
-      setInput("");
+      if (!voiceInput) {
+        setInput("");
+      }
       setIsLoading(true);
 
       try {
