@@ -2,137 +2,223 @@
 
 import { useEffect, useState } from "react";
 import { Button } from "@eventpilot/ui";
-import { Bell, BellOff } from "lucide-react";
-
-type Update = {
-  id: string;
-  timestamp: Date;
-  title: string;
-  message: string;
-  type: "info" | "warning" | "success";
-};
+import { Bell, BellOff, Clock, MapPin } from "lucide-react";
+import { useEvent } from "@/hooks/useEvent";
+import { collection, query, where, onSnapshot, orderBy, limit } from "firebase/firestore";
+import { db } from "@eventpilot/firebase/client";
+import type { ScheduleItem } from "@eventpilot/types";
 
 export function GetUpdates() {
-  const [updates, setUpdates] = useState<Update[]>([]);
+  const { currentEvent } = useEvent();
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
+  const [currentItems, setCurrentItems] = useState<ScheduleItem[]>([]);
+  const [upcomingItems, setUpcomingItems] = useState<ScheduleItem[]>([]);
 
   useEffect(() => {
-    const mockUpdates: Update[] = [
-      {
-        id: "1",
-        timestamp: new Date(Date.now() - 5 * 60 * 1000),
-        title: "New Event Started",
-        message: "The keynote presentation has begun in Hall A.",
-        type: "info",
-      },
-      {
-        id: "2",
-        timestamp: new Date(Date.now() - 15 * 60 * 1000),
-        title: "Stall Opening",
-        message: "Tech Demo Stall #42 is now open for visitors.",
-        type: "success",
-      },
-      {
-        id: "3",
-        timestamp: new Date(Date.now() - 30 * 60 * 1000),
-        title: "Schedule Change",
-        message: "Workshop in Room B has been rescheduled to 3 PM.",
-        type: "warning",
-      },
-    ];
-    setUpdates(mockUpdates);
-  }, []);
+    if (!currentEvent) return;
 
-  const toggleNotifications = async () => {
-    if (!notificationsEnabled) {
-      if ("Notification" in window) {
-        const permission = await Notification.requestPermission();
-        if (permission === "granted") {
-          setNotificationsEnabled(true);
-          new Notification("EventPilot", {
-            body: "You will now receive event updates!",
-            icon: "/icon.png",
-          });
-        }
-      }
-    } else {
-      setNotificationsEnabled(false);
-    }
-  };
+    const now = new Date();
 
-  const getTypeColor = (type: Update["type"]) => {
-    switch (type) {
-      case "info":
-        return "bg-blue-100 dark:bg-blue-900 border-blue-300 dark:border-blue-700";
-      case "warning":
-        return "bg-yellow-100 dark:bg-yellow-900 border-yellow-300 dark:border-yellow-700";
-      case "success":
-        return "bg-green-100 dark:bg-green-900 border-green-300 dark:border-green-700";
-    }
-  };
+    // Subscribe to currently ongoing items
+    const currentQuery = query(
+      collection(db, 'events', currentEvent.id, 'schedule'),
+      where('status', '==', 'ongoing'),
+      orderBy('startTime'),
+      limit(5)
+    );
+
+    const unsubscribeCurrent = onSnapshot(currentQuery, (snapshot) => {
+      const items = snapshot.docs.map(doc => {
+        const data = doc.data();
+        return {
+          id: doc.id,
+          type: data.type,
+          title: data.title,
+          description: data.description,
+          speaker: data.speaker || [],
+          location: data.location,
+          startTime: data.startTime?.toDate() || now,
+          endTime: data.endTime?.toDate() || now,
+          status: data.status,
+          createdAt: data.createdAt?.toDate() || now,
+          updatedAt: data.updatedAt?.toDate() || now,
+        } as ScheduleItem;
+      });
+      setCurrentItems(items);
+    });
+
+    // Subscribe to upcoming scheduled items
+    const upcomingQuery = query(
+      collection(db, 'events', currentEvent.id, 'schedule'),
+      where('status', '==', 'scheduled'),
+      where('startTime', '>=', now),
+      orderBy('startTime'),
+      limit(5)
+    );
+
+    const unsubscribeUpcoming = onSnapshot(upcomingQuery, (snapshot) => {
+      const items = snapshot.docs.map(doc => {
+        const data = doc.data();
+        return {
+          id: doc.id,
+          type: data.type,
+          title: data.title,
+          description: data.description,
+          speaker: data.speaker || [],
+          location: data.location,
+          startTime: data.startTime?.toDate() || now,
+          endTime: data.endTime?.toDate() || now,
+          status: data.status,
+          createdAt: data.createdAt?.toDate() || now,
+          updatedAt: data.updatedAt?.toDate() || now,
+        } as ScheduleItem;
+      });
+      setUpcomingItems(items);
+    });
+
+    return () => {
+      unsubscribeCurrent();
+      unsubscribeUpcoming();
+    };
+  }, [currentEvent]);
 
   const formatTime = (date: Date) => {
-    const now = new Date();
-    const diff = Math.floor((now.getTime() - date.getTime()) / 1000 / 60);
-
-    if (diff < 1) return "Just now";
-    if (diff < 60) return `${diff}m ago`;
-    if (diff < 1440) return `${Math.floor(diff / 60)}h ago`;
-    return date.toLocaleDateString();
+    return date.toLocaleTimeString('en-US', {
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true,
+    });
   };
 
+  const toggleNotifications = () => {
+    setNotificationsEnabled(!notificationsEnabled);
+    // In a real app, you'd request notification permissions here
+  };
+
+  if (!currentEvent) {
+    return (
+      <div className="flex-1 flex items-center justify-center">
+        <p className="text-muted-foreground">No event selected</p>
+      </div>
+    );
+  }
+
   return (
-    <div className="flex flex-col h-full px-1">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-3 sm:mb-4 pb-3 sm:pb-4 border-b">
-        <div className="flex-1">
-          <h3 className="text-base sm:text-lg font-semibold">Event Updates</h3>
-          <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
-            Stay informed about event changes
-          </p>
-        </div>
+    <div className="flex-1 flex flex-col gap-4">
+      <div className="flex items-center justify-between">
+        <h3 className="font-semibold">Live Event Updates</h3>
         <Button
           variant={notificationsEnabled ? "default" : "outline"}
           size="sm"
           onClick={toggleNotifications}
-          className="w-full sm:w-auto text-xs sm:text-sm h-9"
+          className="gap-2"
         >
           {notificationsEnabled ? (
             <>
-              <Bell className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5 sm:mr-2" />
+              <Bell className="h-4 w-4" />
               Enabled
             </>
           ) : (
             <>
-              <BellOff className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5 sm:mr-2" />
-              Enable
+              <BellOff className="h-4 w-4" />
+              Enable Notifications
             </>
           )}
         </Button>
       </div>
 
-      <div className="flex-1 overflow-y-auto space-y-2.5 sm:space-y-3">
-        {updates.length === 0 ? (
-          <div className="text-center text-muted-foreground py-6 sm:py-8 px-4">
-            <p className="text-base sm:text-lg font-medium">No updates yet</p>
-            <p className="text-xs sm:text-sm mt-2">
-              Check back later for event announcements.
-            </p>
-          </div>
-        ) : (
-          updates.map((update) => (
-            <div
-              key={update.id}
-              className={`p-3 sm:p-4 rounded-lg border ${getTypeColor(update.type)}`}
-            >
-              <div className="flex items-start justify-between gap-2 mb-1">
-                <h4 className="font-semibold text-xs sm:text-sm flex-1">{update.title}</h4>
-                <span className="text-xs text-muted-foreground whitespace-nowrap">
-                  {formatTime(update.timestamp)}
-                </span>
-              </div>
-              <p className="text-xs sm:text-sm">{update.message}</p>
+      <div className="flex-1 overflow-y-auto space-y-4">
+        {currentItems.length > 0 && (
+          <div>
+            <h4 className="text-sm font-medium text-muted-foreground mb-2">
+              Happening Now
+            </h4>
+            <div className="space-y-2">
+              {currentItems.map((item) => (
+                <div
+                  key={item.id}
+                  className="p-3 border rounded-lg bg-primary/5 border-primary/20"
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="px-2 py-0.5 text-xs font-medium bg-primary text-primary-foreground rounded">
+                          {item.type}
+                        </span>
+                        <span className="text-xs text-muted-foreground">LIVE</span>
+                      </div>
+                      <h5 className="font-medium text-sm truncate">{item.title}</h5>
+                      {item.speaker.length > 0 && (
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {item.speaker.join(", ")}
+                        </p>
+                      )}
+                      <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground">
+                        <div className="flex items-center gap-1">
+                          <Clock className="h-3 w-3" />
+                          {formatTime(item.startTime)} - {formatTime(item.endTime)}
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <MapPin className="h-3 w-3" />
+                          {item.location.zone}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
-          ))
+          </div>
+        )}
+
+        {upcomingItems.length > 0 && (
+          <div>
+            <h4 className="text-sm font-medium text-muted-foreground mb-2">
+              Coming Up
+            </h4>
+            <div className="space-y-2">
+              {upcomingItems.map((item) => (
+                <div key={item.id} className="p-3 border rounded-lg">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="px-2 py-0.5 text-xs font-medium bg-muted text-muted-foreground rounded">
+                          {item.type}
+                        </span>
+                      </div>
+                      <h5 className="font-medium text-sm truncate">{item.title}</h5>
+                      {item.speaker.length > 0 && (
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {item.speaker.join(", ")}
+                        </p>
+                      )}
+                      <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground">
+                        <div className="flex items-center gap-1">
+                          <Clock className="h-3 w-3" />
+                          {formatTime(item.startTime)}
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <MapPin className="h-3 w-3" />
+                          {item.location.zone}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {currentItems.length === 0 && upcomingItems.length === 0 && (
+          <div className="flex-1 flex items-center justify-center">
+            <div className="text-center">
+              <p className="text-muted-foreground mb-2">No updates available</p>
+              <p className="text-sm text-muted-foreground">
+                Check back later for event updates
+              </p>
+            </div>
+          </div>
         )}
       </div>
     </div>
