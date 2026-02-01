@@ -1,8 +1,13 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
   reactCompiler: true,
+  transpilePackages: [
+    "@eventpilot/types",
+    "@eventpilot/firebase",
+    "@eventpilot/ui",
+    "@eventpilot/utils",
+  ],
 };
 
 export default nextConfig;

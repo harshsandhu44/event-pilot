@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { EventProvider } from "@/hooks/useEvent";
@@ -16,12 +16,13 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "EventPilot - Your AI Event Guide",
   description: "Navigate events with AI-powered chat, voice assistance, and real-time updates",
-  viewport: {
-    width: "device-width",
-    initialScale: 1,
-    maximumScale: 1,
-    userScalable: false,
-  },
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
   themeColor: "#000000",
 };
 
