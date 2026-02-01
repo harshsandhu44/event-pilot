@@ -12,18 +12,21 @@
   "dependencies": {
     "@eventpilot/types": "workspace:*",
     "@eventpilot/firebase": "workspace:*",
-    "@eventpilot/ui": "workspace:*",
     "@eventpilot/utils": "workspace:*",
     "@radix-ui/react-dialog": "^1.1.4",
     "@radix-ui/react-label": "^2.1.2",
     "@radix-ui/react-select": "^2.1.7",
+    "@radix-ui/react-slot": "^1.2.4",
     "@radix-ui/react-toast": "^1.2.5",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
     "firebase": "^12.8.0",
     "firebase-admin": "^13.1.0",
     "lucide-react": "^0.563.0",
     "next": "16.1.6",
     "react": "19.2.3",
     "react-dom": "19.2.3",
+    "tailwind-merge": "^3.4.0",
     "zod": "^4.3.6"
   },
   "devDependencies": {

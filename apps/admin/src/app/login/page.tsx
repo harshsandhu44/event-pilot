@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@eventpilot/ui";
-import { Button, Input } from "@eventpilot/ui";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui";
+import { Button, Input } from "@/components/ui";
 import { auth } from "@eventpilot/firebase/client";
 import { signInWithEmailAndPassword } from "firebase/auth";
 

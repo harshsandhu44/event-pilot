@@ -1,7 +1,7 @@
 "use client";
 
 import { useEvent } from "@/hooks/useEvent";
-import { Button } from "@eventpilot/ui";
+import { Button } from "@/components/ui";
 import { CalendarDays } from "lucide-react";
 
 export function EventSelector() {

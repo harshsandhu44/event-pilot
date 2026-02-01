@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@eventpilot/ui";
-import { Button } from "@eventpilot/ui";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui";
+import { Button } from "@/components/ui";
 import { Plus, Calendar, Users, MapPin, Boxes } from "lucide-react";
 import { getEvents } from "@eventpilot/firebase/queries/events";
 import type { Event } from "@eventpilot/types";

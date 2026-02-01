@@ -8,7 +8,7 @@ export interface Event {
   wifiDetails?: {
     ssid: string;
     password: string;
-  };
+  } | null;
   status: 'draft' | 'active' | 'completed' | 'cancelled';
   createdAt: Date;
   updatedAt: Date;

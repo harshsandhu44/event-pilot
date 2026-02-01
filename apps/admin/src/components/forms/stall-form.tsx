@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Card, CardContent, CardHeader, CardTitle } from "@eventpilot/ui";
-import { Button, Input } from "@eventpilot/ui";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui";
+import { Button, Input } from "@/components/ui";
 import type { Stall, StallCreate } from "@eventpilot/types";
 import { createStall, updateStall } from "@eventpilot/firebase/queries/stalls";
 

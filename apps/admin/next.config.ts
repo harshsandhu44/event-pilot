@@ -4,7 +4,6 @@ const nextConfig: NextConfig = {
   transpilePackages: [
     "@eventpilot/types",
     "@eventpilot/firebase",
-    "@eventpilot/ui",
     "@eventpilot/utils",
   ],
 };

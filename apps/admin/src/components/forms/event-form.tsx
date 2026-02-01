@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Card, CardContent, CardHeader, CardTitle } from "@eventpilot/ui";
-import { Button, Input } from "@eventpilot/ui";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui";
+import { Button, Input } from "@/components/ui";
 import type { Event, EventCreate } from "@eventpilot/types";
 import { createEvent, updateEvent } from "@eventpilot/firebase/queries/events";
 
@@ -50,7 +50,7 @@ export function EventForm({ event, onSuccess }: EventFormProps) {
               ssid: formData.wifiSsid,
               password: formData.wifiPassword,
             }
-          : undefined,
+          : null,
       };
 
       if (event) {

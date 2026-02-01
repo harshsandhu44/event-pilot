@@ -2,8 +2,8 @@
 
 import { useEffect, useRef } from "react";
 import { useChat } from "@/hooks/useChat";
-import { Input } from "@eventpilot/ui";
-import { Button } from "@eventpilot/ui";
+import { Input } from "@/components/ui";
+import { Button } from "@/components/ui";
 import { Send } from "lucide-react";
 
 export function TextChat() {

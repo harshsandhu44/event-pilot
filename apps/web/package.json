@@ -12,7 +12,6 @@
   "dependencies": {
     "@eventpilot/types": "workspace:*",
     "@eventpilot/firebase": "workspace:*",
-    "@eventpilot/ui": "workspace:*",
     "@eventpilot/utils": "workspace:*",
     "@11labs/react": "^0.2.0",
     "@ai-sdk/google": "^3.0.20",

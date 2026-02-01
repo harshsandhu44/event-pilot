@@ -2,8 +2,8 @@
 
 import { useAuth } from "@/hooks/useAuth";
 import { useEvent } from "@/hooks/useEvent";
-import { Card, CardContent, CardHeader, CardTitle } from "@eventpilot/ui";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@eventpilot/ui";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui";
 import { MessageSquare, Mic, Bell } from "lucide-react";
 import { TextChat } from "@/components/text-chat";
 import { VoiceChat } from "@/components/voice-chat";

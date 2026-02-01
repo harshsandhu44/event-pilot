@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Button } from "@eventpilot/ui";
+import { Button } from "@/components/ui";
 import { Bell, BellOff, Clock, MapPin } from "lucide-react";
 import { useEvent } from "@/hooks/useEvent";
 import { collection, query, where, onSnapshot, orderBy, limit } from "firebase/firestore";

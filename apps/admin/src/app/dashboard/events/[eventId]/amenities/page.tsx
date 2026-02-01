@@ -3,8 +3,8 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { Card, CardContent } from "@eventpilot/ui";
-import { Button } from "@eventpilot/ui";
+import { Card, CardContent } from "@/components/ui";
+import { Button } from "@/components/ui";
 import { Plus, MapPin, Calendar } from "lucide-react";
 import { getEventById } from "@eventpilot/firebase/queries/events";
 import { getAmenities } from "@eventpilot/firebase/queries/amenities";

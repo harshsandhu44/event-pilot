@@ -1,7 +1,7 @@
 "use client";
 
 import { useAuth } from "@/lib/useAuth";
-import { Button } from "@eventpilot/ui";
+import { Button } from "@/components/ui";
 import { LogOut, Calendar } from "lucide-react";
 import Link from "next/link";
 
